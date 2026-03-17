@@ -1,5 +1,5 @@
 // 调试：确认脚本已加载
-console.log('Weather App script loaded!');
+console.log('Weather App script loaded! v3');
 
 // 天气图标映射
 const weatherIcons = {
@@ -98,6 +98,7 @@ async function searchWeather() {
 
     // 尝试直接映射
     if (cityCoords[normalizedCityName]) {
+        console.log('Found city:', normalizedCityName);
         await fetchWeather(normalizedCityName);
     } else {
         // 尝试模糊匹配
@@ -106,6 +107,7 @@ async function searchWeather() {
         );
 
         if (matchedCity) {
+            console.log('Matched city:', matchedCity);
             cityInput.value = matchedCity;
             await fetchWeather(matchedCity);
         } else {
@@ -125,20 +127,25 @@ function handleKeyPress(event) {
 
 // 获取天气数据
 async function fetchWeather(cityName) {
+    console.log('fetchWeather called for:', cityName);
     const weatherResult = document.getElementById('weatherResult');
     weatherResult.style.display = 'none';
 
     try {
         // 获取城市坐标
+        console.log('Searching in cityCoords:', Object.keys(cityCoords).slice(0, 10));
         if (!cityCoords[cityName]) {
             showError('未找到该城市，请尝试：北京、上海、广州、深圳等');
+            console.log('City not found in cityCoords');
             return;
         }
 
         const coords = cityCoords[cityName];
         const lat = coords.lat;
         const lon = coords.lon;
+        console.log('Coordinates:', lat, lon);
 
+        console.log('Fetching weather data...');
         // 显示加载状态
         const loadingHtml = `
             <div class="loading-message">
@@ -151,6 +158,8 @@ async function fetchWeather(cityName) {
 
         // 获取当前天气
         const currentUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m&timezone=Asia%2FShanghai`;
+        console.log('Fetching URL:', currentUrl);
+
         const currentResponse = await fetch(currentUrl);
 
         if (!currentResponse.ok) {
@@ -158,9 +167,12 @@ async function fetchWeather(cityName) {
         }
 
         const currentData = await currentResponse.json();
+        console.log('Current weather data:', currentData);
 
         // 获取未来7天预报
         const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FShanghai&forecast_days=7`;
+        console.log('Fetching forecast URL:', forecastUrl);
+
         const forecastResponse = await fetch(forecastUrl);
 
         if (!forecastResponse.ok) {
@@ -168,6 +180,7 @@ async function fetchWeather(cityName) {
         }
 
         const forecastData = await forecastResponse.json();
+        console.log('Forecast data:', forecastData);
 
         // 显示天气
         displayWeather(currentData, forecastData, cityName);
@@ -190,6 +203,7 @@ async function fetchWeather(cityName) {
 
 // 显示天气信息
 function displayWeather(currentData, forecastData, cityName) {
+    console.log('Displaying weather for:', cityName);
     const weatherResult = document.getElementById('weatherResult');
     const weatherCode = currentData.current.weather_code;
     const icon = weatherIcons[weatherCode] || '🌤️';
@@ -290,6 +304,7 @@ function getDayName(date) {
 
 // 显示错误信息
 function showError(message) {
+    console.log('Error:', message);
     const weatherResult = document.getElementById('weatherResult');
     weatherResult.innerHTML = `<div class="error-message">${message}</div>`;
     weatherResult.classList.add('active');
