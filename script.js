@@ -75,7 +75,12 @@ const cityCoords = {
 // 搜索城市
 async function searchWeather() {
     const cityInput = document.getElementById('cityInput');
+    const weatherResult = document.getElementById('weatherResult');
     const cityName = cityInput.value.trim();
+
+    // 隐藏之前的错误信息
+    weatherResult.style.display = 'none';
+    weatherResult.classList.remove('active');
 
     if (!cityName) {
         showError('请输入城市名称');
@@ -128,12 +133,22 @@ async function fetchWeather(cityName) {
         const lat = coords.lat;
         const lon = coords.lon;
 
+        // 显示加载状态
+        const loadingHtml = `
+            <div class="loading-message">
+                <div class="spinner"></div>
+                <p>正在获取天气数据...</p>
+            </div>
+        `;
+        weatherResult.innerHTML = loadingHtml;
+        weatherResult.classList.add('active');
+
         // 获取当前天气
         const currentUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m&timezone=Asia%2FShanghai`;
         const currentResponse = await fetch(currentUrl);
 
         if (!currentResponse.ok) {
-            throw new Error('获取当前天气失败');
+            throw new Error('获取当前天气失败: HTTP ' + currentResponse.status);
         }
 
         const currentData = await currentResponse.json();
@@ -143,7 +158,7 @@ async function fetchWeather(cityName) {
         const forecastResponse = await fetch(forecastUrl);
 
         if (!forecastResponse.ok) {
-            throw new Error('获取预报数据失败');
+            throw new Error('获取预报数据失败: HTTP ' + forecastResponse.status);
         }
 
         const forecastData = await forecastResponse.json();
@@ -153,7 +168,17 @@ async function fetchWeather(cityName) {
 
     } catch (error) {
         console.error('获取天气数据失败:', error);
-        showError('获取天气数据失败，请稍后再试或换个城市试试');
+        let errorMessage = '获取天气数据失败';
+
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            errorMessage = '网络请求失败，请检查网络连接';
+        } else if (error.message.includes('404')) {
+            errorMessage = 'API 请求失败，请稍后再试';
+        } else if (error.message.includes('500') || error.message.includes('503')) {
+            errorMessage = '服务器暂时不可用，请稍后再试';
+        }
+
+        showError(errorMessage + '\n\n错误详情: ' + error.message);
     }
 }
 
