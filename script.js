@@ -1,3 +1,6 @@
+// 调试：确认脚本已加载
+console.log('Weather App script loaded!');
+
 // 天气图标映射
 const weatherIcons = {
     0: '☀️',  // Clear
@@ -74,9 +77,12 @@ const cityCoords = {
 
 // 搜索城市
 async function searchWeather() {
+    console.log('searchWeather called');
     const cityInput = document.getElementById('cityInput');
     const weatherResult = document.getElementById('weatherResult');
     const cityName = cityInput.value.trim();
+
+    console.log('City name:', cityName);
 
     // 隐藏之前的错误信息
     weatherResult.style.display = 'none';
